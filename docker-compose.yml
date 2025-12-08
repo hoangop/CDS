@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   # Database PostgreSQL
   db:
@@ -34,14 +32,13 @@ services:
   # Frontend (Next.js)
   frontend:
     build: ./frontend
-    command: npm run dev
-    volumes:
-      - ./frontend:/app
-      - /app/node_modules
+    # Sử dụng production build từ Dockerfile (standalone mode)
+    # Không override command vì Dockerfile đã có CMD
     ports:
       - "3000:3000"
     environment:
       - NEXT_PUBLIC_API_URL=http://localhost:8000/api/v1
+      - NODE_ENV=production
     depends_on:
       - backend
     networks:

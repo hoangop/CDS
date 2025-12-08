@@ -1,0 +1,109 @@
+name: Deploy to GCP
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+env:
+  PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
+  GAR_LOCATION: asia-southeast1  # Singapore - tốt cho Việt Nam
+  SERVICE_BACKEND: cds-backend
+  SERVICE_FRONTEND: cds-frontend
+  REGION: asia-southeast1  # Singapore - tốt cho Việt Nam
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+
+      - name: Configure Docker for GAR
+        run: |
+          gcloud auth configure-docker $GAR_LOCATION-docker.pkg.dev
+
+      # Build và push Backend image
+      - name: Build Backend Docker image
+        run: |
+          docker build -t $GAR_LOCATION-docker.pkg.dev/$PROJECT_ID/cds-images/$SERVICE_BACKEND:$GITHUB_SHA \
+            -t $GAR_LOCATION-docker.pkg.dev/$PROJECT_ID/cds-images/$SERVICE_BACKEND:latest \
+            ./backend
+
+      - name: Push Backend image to GAR
+        run: |
+          docker push $GAR_LOCATION-docker.pkg.dev/$PROJECT_ID/cds-images/$SERVICE_BACKEND:$GITHUB_SHA
+          docker push $GAR_LOCATION-docker.pkg.dev/$PROJECT_ID/cds-images/$SERVICE_BACKEND:latest
+
+      # Build và push Frontend image
+      - name: Build Frontend Docker image
+        run: |
+          docker build -t $GAR_LOCATION-docker.pkg.dev/$PROJECT_ID/cds-images/$SERVICE_FRONTEND:$GITHUB_SHA \
+            -t $GAR_LOCATION-docker.pkg.dev/$PROJECT_ID/cds-images/$SERVICE_FRONTEND:latest \
+            ./frontend
+
+      - name: Push Frontend image to GAR
+        run: |
+          docker push $GAR_LOCATION-docker.pkg.dev/$PROJECT_ID/cds-images/$SERVICE_FRONTEND:$GITHUB_SHA
+          docker push $GAR_LOCATION-docker.pkg.dev/$PROJECT_ID/cds-images/$SERVICE_FRONTEND:latest
+
+      # Deploy Backend to Cloud Run
+      - name: Deploy Backend to Cloud Run
+        run: |
+          gcloud run deploy $SERVICE_BACKEND \
+            --image $GAR_LOCATION-docker.pkg.dev/$PROJECT_ID/cds-images/$SERVICE_BACKEND:$GITHUB_SHA \
+            --region $REGION \
+            --platform managed \
+            --allow-unauthenticated \
+            --set-env-vars DATABASE_URL="${{ secrets.DATABASE_URL }}" \
+            --add-cloudsql-instances=${{ secrets.CLOUD_SQL_INSTANCE }} \
+            --memory 512Mi \
+            --cpu 1 \
+            --min-instances 0 \
+            --max-instances 10 \
+            --timeout 300 \
+            --port 8000
+
+      # Deploy Frontend to Cloud Run
+      - name: Deploy Frontend to Cloud Run
+        run: |
+          BACKEND_URL=$(gcloud run services describe $SERVICE_BACKEND --region $REGION --format 'value(status.url)')
+          gcloud run deploy $SERVICE_FRONTEND \
+            --image $GAR_LOCATION-docker.pkg.dev/$PROJECT_ID/cds-images/$SERVICE_FRONTEND:$GITHUB_SHA \
+            --region $REGION \
+            --platform managed \
+            --allow-unauthenticated \
+            --set-env-vars NEXT_PUBLIC_API_URL="$BACKEND_URL/api/v1" \
+            --memory 512Mi \
+            --cpu 1 \
+            --min-instances 0 \
+            --max-instances 10 \
+            --timeout 300 \
+            --port 3000
+
+      - name: Show deployment URLs
+        run: |
+          echo "✅ Deployment completed!"
+          echo ""
+          echo "Backend URL:"
+          gcloud run services describe $SERVICE_BACKEND --region $REGION --format 'value(status.url)'
+          echo ""
+          echo "Frontend URL:"
+          gcloud run services describe $SERVICE_FRONTEND --region $REGION --format 'value(status.url)'
+

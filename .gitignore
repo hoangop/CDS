@@ -81,3 +81,9 @@ data_pipeline/raw_data/pdfs/*.pdf
 # Temporary files
 SCHOOL NAME | TTL APP | TTL ADM | INT AP
 
+# GCP Secrets & Keys
+key.json
+*.json.key
+service-account-*.json
+cloud-sql-proxy
+

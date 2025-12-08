@@ -9,10 +9,24 @@ SQLALCHEMY_DATABASE_URL = os.getenv(
     "postgresql://postgres:postgres@db:5432/cds_db" # URL trong mạng Docker
 )
 
-# Nếu chạy local ngoài docker (để test):
-# SQLALCHEMY_DATABASE_URL = "postgresql://postgres:postgres@localhost:5432/cds_db"
+# Hỗ trợ Cloud SQL với Unix socket
+# Nếu DATABASE_URL chứa /cloudsql/, sử dụng pg8000 driver
+if SQLALCHEMY_DATABASE_URL and "/cloudsql/" in SQLALCHEMY_DATABASE_URL:
+    # Cloud SQL connection qua Unix socket
+    SQLALCHEMY_DATABASE_URL = SQLALCHEMY_DATABASE_URL.replace(
+        "postgresql://",
+        "postgresql+pg8000://"
+    )
 
-engine = create_engine(SQLALCHEMY_DATABASE_URL)
+# Tạo engine với connection pooling cho production
+engine = create_engine(
+    SQLALCHEMY_DATABASE_URL,
+    pool_size=5,
+    max_overflow=10,
+    pool_pre_ping=True,  # Verify connections before using
+    pool_recycle=3600    # Recycle connections after 1 hour
+)
+
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 Base = declarative_base()
