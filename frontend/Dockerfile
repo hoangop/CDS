@@ -31,6 +31,9 @@ COPY package.json package-lock.json* ./
 COPY . .
 
 # Build Next.js app
+# NEXT_PUBLIC_API_URL sẽ được inject từ build args hoặc env var
+ARG NEXT_PUBLIC_API_URL
+ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
 RUN npm run build
 
 FROM node:18-alpine AS runner

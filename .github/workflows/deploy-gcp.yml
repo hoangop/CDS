@@ -54,8 +54,10 @@ jobs:
       # Build và push Frontend image
       - name: Build Frontend Docker image
         run: |
+          BACKEND_URL=$(gcloud run services describe $SERVICE_BACKEND --region $REGION --format 'value(status.url)')
           docker build -t $GAR_LOCATION-docker.pkg.dev/$PROJECT_ID/cds-images/$SERVICE_FRONTEND:$GITHUB_SHA \
             -t $GAR_LOCATION-docker.pkg.dev/$PROJECT_ID/cds-images/$SERVICE_FRONTEND:latest \
+            --build-arg NEXT_PUBLIC_API_URL="$BACKEND_URL/api/v1" \
             ./frontend
 
       - name: Push Frontend image to GAR
