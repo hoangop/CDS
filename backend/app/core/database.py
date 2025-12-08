@@ -10,13 +10,11 @@ SQLALCHEMY_DATABASE_URL = os.getenv(
 )
 
 # Hỗ trợ Cloud SQL với Unix socket
-# Nếu DATABASE_URL chứa /cloudsql/, sử dụng pg8000 driver
+# Nếu DATABASE_URL chứa /cloudsql/, sử dụng psycopg2 driver (tốt hơn pg8000 cho Unix socket)
 if SQLALCHEMY_DATABASE_URL and "/cloudsql/" in SQLALCHEMY_DATABASE_URL:
-    # Cloud SQL connection qua Unix socket
-    SQLALCHEMY_DATABASE_URL = SQLALCHEMY_DATABASE_URL.replace(
-        "postgresql://",
-        "postgresql+pg8000://"
-    )
+    # Cloud SQL connection qua Unix socket - psycopg2 hỗ trợ tốt hơn
+    # Không cần thay đổi driver vì psycopg2 là default cho postgresql://
+    pass
 
 # Tạo engine với connection pooling cho production
 engine = create_engine(
