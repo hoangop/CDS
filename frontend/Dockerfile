@@ -37,7 +37,7 @@ FROM node:18-alpine AS runner
 
 WORKDIR /app
 
-ENV NODE_ENV production
+ENV NODE_ENV=production
 
 # Copy built application từ standalone output
 # Next.js standalone đã bao gồm tất cả dependencies và cấu trúc cần thiết
@@ -47,8 +47,8 @@ COPY --from=builder /app/.next/static ./.next/static
 
 EXPOSE 3000
 
-ENV PORT 3000
-ENV HOSTNAME "0.0.0.0"
+ENV PORT=3000
+ENV HOSTNAME="0.0.0.0"
 
 # Server.js nằm trong root của standalone folder
 CMD ["node", "server.js"]
