@@ -28,7 +28,8 @@ export default function SchoolDetail() {
   useEffect(() => {
     if (params.id) {
       console.log("Fetching details for ID:", params.id);
-      fetch(getApiUrl(`/api/v1/schools/${params.id}`))
+      // NEXT_PUBLIC_API_URL đã có /api/v1 rồi, chỉ cần thêm /schools/{id}
+      fetch(getApiUrl(`/schools/${params.id}`))
         .then(res => res.json())
         .then(data => {
           console.log("School Detail Data:", data);

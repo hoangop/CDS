@@ -30,7 +30,8 @@ export default function Home() {
         if (search) params.append('q', search);
         if (letter) params.append('letter', letter);
         
-        const url = `${getApiUrl('/api/v1/schools')}?${params.toString()}`;
+        // NEXT_PUBLIC_API_URL đã có /api/v1 rồi, chỉ cần thêm /schools
+        const url = `${getApiUrl('/schools')}?${params.toString()}`;
         console.log("Fetching schools:", url);
         
         const res = await fetch(url);
