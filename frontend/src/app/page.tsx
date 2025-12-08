@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Navbar from '@/components/Navbar';
+import { getApiUrl } from '@/lib/api';
 
 interface School {
   institution_id: string;
@@ -29,7 +30,7 @@ export default function Home() {
         if (search) params.append('q', search);
         if (letter) params.append('letter', letter);
         
-        const url = `http://localhost:8000/api/v1/schools?${params.toString()}`;
+        const url = `${getApiUrl('/api/v1/schools')}?${params.toString()}`;
         console.log("Fetching schools:", url);
         
         const res = await fetch(url);

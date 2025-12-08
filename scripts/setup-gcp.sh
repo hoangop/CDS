@@ -171,6 +171,11 @@ gcloud projects add-iam-policy-binding $PROJECT_ID \
     --member="serviceAccount:$SA_EMAIL" \
     --role="roles/cloudsql.client"
 
+# Grant serviceAccountUser role (required for Cloud Run to use service accounts)
+gcloud projects add-iam-policy-binding $PROJECT_ID \
+    --member="serviceAccount:$SA_EMAIL" \
+    --role="roles/iam.serviceAccountUser"
+
 # Create and download key
 echo "🔑 Creating service account key..."
 gcloud iam service-accounts keys create key.json \

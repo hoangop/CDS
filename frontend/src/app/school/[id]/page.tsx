@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react';
 import Navbar from '@/components/Navbar';
 import { useParams } from 'next/navigation';
+import { getApiUrl } from '@/lib/api';
 
 interface AdmissionData {
   academic_year: string;
@@ -27,7 +28,7 @@ export default function SchoolDetail() {
   useEffect(() => {
     if (params.id) {
       console.log("Fetching details for ID:", params.id);
-      fetch(`http://localhost:8000/api/v1/schools/${params.id}`)
+      fetch(getApiUrl(`/api/v1/schools/${params.id}`))
         .then(res => res.json())
         .then(data => {
           console.log("School Detail Data:", data);
