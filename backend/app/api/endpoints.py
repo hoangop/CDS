@@ -28,6 +28,8 @@ class AdmissionData(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
 class SchoolDetail(SchoolBase):
+    rank_2025: Optional[int] = None
+    rank_type: Optional[str] = None
     admission_data: List[AdmissionData] = []
 
 class SchoolListItem(SchoolBase):
