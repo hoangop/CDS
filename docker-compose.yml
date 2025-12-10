@@ -31,14 +31,19 @@ services:
 
   # Frontend (Next.js)
   frontend:
-    build: ./frontend
-    # Sử dụng production build từ Dockerfile (standalone mode)
-    # Không override command vì Dockerfile đã có CMD
+    build: 
+      context: ./frontend
+      target: deps  # Chỉ build đến deps stage, không build production
+    command: npm run dev
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+      - /app/.next
     ports:
       - "3000:3000"
     environment:
       - NEXT_PUBLIC_API_URL=http://localhost:8000/api/v1
-      - NODE_ENV=production
+      - NODE_ENV=development
     depends_on:
       - backend
     networks:
