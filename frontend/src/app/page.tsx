@@ -150,89 +150,57 @@ export default function Home() {
               </div>
 
               {/* Table */}
-              <div className="bg-white shadow-xl rounded-2xl overflow-hidden border border-slate-200">
+              <div className="bg-white shadow-lg rounded-lg overflow-hidden">
                 <div className="overflow-x-auto">
-                  <table className="min-w-full divide-y divide-slate-200">
-                    <thead className="bg-gradient-to-r from-slate-700 to-slate-800">
+                  <table className="min-w-full">
+                    <thead className="bg-cyan-600">
                       <tr>
-                        <th scope="col" className="sticky left-0 bg-slate-700 px-6 py-4 text-left text-xs font-bold text-white uppercase tracking-wider z-10">
+                        <th scope="col" className="px-6 py-4 text-left text-sm font-semibold text-white">
                           Institution Name
                         </th>
-                        <th scope="col" className="px-4 py-4 text-right text-xs font-bold text-amber-300 uppercase tracking-wider">
+                        <th scope="col" className="px-6 py-4 text-center text-sm font-semibold text-white">
                           Rank
                         </th>
-                        <th scope="col" className="px-4 py-4 text-left text-xs font-bold text-amber-200 uppercase tracking-wider">
-                          Category
-                        </th>
-                        <th scope="col" className="px-4 py-4 text-right text-xs font-bold text-slate-200 uppercase tracking-wider border-l border-slate-600">
-                          Total Apps
-                        </th>
-                        <th scope="col" className="px-4 py-4 text-right text-xs font-bold text-slate-200 uppercase tracking-wider">
-                          Total Admit
-                        </th>
-                        <th scope="col" className="px-4 py-4 text-right text-xs font-bold text-emerald-300 uppercase tracking-wider">
+                        <th scope="col" className="px-6 py-4 text-right text-sm font-semibold text-white">
                           Overall Rate
                         </th>
-                        <th scope="col" className="px-4 py-4 text-right text-xs font-bold text-blue-200 uppercase tracking-wider border-l border-slate-600">
-                          Int'l Apps
-                        </th>
-                        <th scope="col" className="px-4 py-4 text-right text-xs font-bold text-blue-200 uppercase tracking-wider">
-                          Int'l Admit
-                        </th>
-                        <th scope="col" className="px-4 py-4 text-right text-xs font-bold text-blue-300 uppercase tracking-wider">
-                          Int'l Rate
+                        <th scope="col" className="px-6 py-4 text-right text-sm font-semibold text-white">
+                          International Rate
                         </th>
                       </tr>
                     </thead>
-                    <tbody className="bg-white divide-y divide-slate-200">
+                    <tbody className="divide-y divide-gray-200">
                       {currentSchools.map((school, idx) => (
                         <tr 
                           key={school.institution_id} 
-                          className={`hover:bg-indigo-50/50 transition-all duration-150 ${
-                            idx % 2 === 0 ? 'bg-white' : 'bg-slate-50/40'
+                          className={`hover:bg-gray-100 transition-colors ${
+                            idx % 2 === 0 ? 'bg-white' : 'bg-gray-50'
                           }`}
                         >
-                          <td className="sticky left-0 bg-inherit px-6 py-4 text-sm z-10 border-r border-slate-200">
+                          <td className="px-6 py-4">
                             <Link 
                               href={`/school/${school.institution_id}`} 
-                              className="font-semibold text-indigo-700 hover:text-indigo-900 hover:underline transition-colors inline-block"
+                              className="font-semibold text-gray-900 hover:text-cyan-600 hover:underline transition-colors"
                             >
                               {school.name}
                             </Link>
-                            <div className="text-xs text-slate-500 mt-0.5 truncate max-w-[280px]">
-                              {school.city_state_zip || "Location unavailable"}
+                            <div className="text-sm text-gray-600 mt-1">
+                              {school.rank_type || "—"}
                             </div>
                           </td>
-                          <td className="px-4 py-4 whitespace-nowrap text-sm text-right">
+                          <td className="px-6 py-4 whitespace-nowrap text-center">
                             {school.rank_2025 ? (
-                              <span className="inline-flex items-center justify-center px-2.5 py-0.5 rounded-full bg-amber-100 text-amber-800 font-bold text-xs">
+                              <span className="inline-flex items-center justify-center px-3 py-1 rounded-full bg-amber-100 text-amber-800 font-bold text-sm">
                                 #{school.rank_2025}
                               </span>
                             ) : (
-                              <span className="text-slate-400 font-medium">—</span>
+                              <span className="text-gray-400 font-medium">—</span>
                             )}
                           </td>
-                          <td className="px-4 py-4 text-xs text-left">
-                            <span className="text-slate-600 font-medium leading-tight line-clamp-2">
-                              {school.rank_type || "—"}
-                            </span>
-                          </td>
-                          <td className="px-4 py-4 whitespace-nowrap text-sm text-right font-semibold text-slate-700 border-l border-slate-200">
-                            {school.total_applicants ? school.total_applicants.toLocaleString() : "—"}
-                          </td>
-                          <td className="px-4 py-4 whitespace-nowrap text-sm text-right font-semibold text-slate-700">
-                            {school.total_admitted ? school.total_admitted.toLocaleString() : "—"}
-                          </td>
-                          <td className="px-4 py-4 whitespace-nowrap text-sm text-right font-bold text-emerald-700">
+                          <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-semibold text-gray-900">
                             {calcRate(school.total_admitted, school.total_applicants)}
                           </td>
-                          <td className="px-4 py-4 whitespace-nowrap text-sm text-right font-semibold text-blue-700 border-l border-slate-200 bg-blue-50/30">
-                            {school.applicants_international ? school.applicants_international.toLocaleString() : "—"}
-                          </td>
-                          <td className="px-4 py-4 whitespace-nowrap text-sm text-right font-semibold text-blue-700 bg-blue-50/30">
-                            {school.admitted_international ? school.admitted_international.toLocaleString() : "—"}
-                          </td>
-                          <td className="px-4 py-4 whitespace-nowrap text-sm text-right font-bold text-blue-800 bg-blue-50/30">
+                          <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-semibold text-gray-900">
                             {calcRate(school.admitted_international, school.applicants_international)}
                           </td>
                         </tr>
