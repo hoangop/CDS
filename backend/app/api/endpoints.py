@@ -31,6 +31,8 @@ class SchoolDetail(SchoolBase):
     admission_data: List[AdmissionData] = []
 
 class SchoolListItem(SchoolBase):
+    rank_2025: Optional[int] = None
+    rank_type: Optional[str] = None
     total_applicants: Optional[int] = None
     total_admitted: Optional[int] = None
     applicants_international: Optional[int] = None
@@ -68,6 +70,9 @@ def get_schools(
     for school, admission in results:
         # Pydantic v2 syntax
         item = SchoolListItem.model_validate(school)
+        # Thêm rank từ Institution_Master
+        item.rank_2025 = school.rank_2025
+        item.rank_type = school.rank_type
         if admission:
             item.total_applicants = admission.total_applicants
             item.total_admitted = admission.total_admitted

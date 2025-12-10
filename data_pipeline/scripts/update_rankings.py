@@ -304,7 +304,7 @@ def main():
     setup_database()
     
     # Lấy danh sách trường cần update (tăng limit lên 50)
-    schools = get_schools_to_update(limit=200)
+    schools = get_schools_to_update(limit=20)
     
     if not schools:
         print("Không có trường nào cần cập nhật.")

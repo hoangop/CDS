@@ -10,6 +10,8 @@ class Institution_Master(Base):
     city_state_zip = Column(String(255))
     control = Column(String(50))
     website_url = Column(String(255))
+    rank_2025 = Column(Integer)
+    rank_type = Column(String(255))
     
     # Quan hệ
     admissions = relationship("Admission_C", back_populates="institution")
