@@ -1,0 +1,320 @@
+# CDS Analytics - AI Agent Instructions
+
+You are working on **CDS Analytics**, a full-stack web application for analyzing U.S. university admission data.
+
+## 📚 MANDATORY READING
+
+Before making ANY changes, READ these files:
+1. **ARCHITECTURE.md** - Complete system design, API docs, database schema
+2. **QUICKSTART.md** - Setup and common tasks
+3. **README.md** - Project overview
+
+## 🏗️ SYSTEM ARCHITECTURE
+
+### Stack
+- **Frontend:** Next.js 14 + TypeScript + TailwindCSS (port 3000)
+- **Backend:** FastAPI + SQLAlchemy + Pydantic v2 (port 8000)
+- **Database:** PostgreSQL 15 (port 5432)
+- **Deployment:** Docker Compose (local dev)
+
+### File Structure
+```
+frontend/src/app/          # Next.js pages (App Router)
+backend/app/api/           # FastAPI endpoints
+backend/app/models/        # SQLAlchemy models
+data_pipeline/scripts/     # Data import/scraping scripts
+```
+
+## 🗄️ DATABASE SCHEMA
+
+### institution_master
+- `institution_id` VARCHAR(50) PRIMARY KEY
+- `name`, `city_state_zip`, `website_url`
+- `rank_2025` INTEGER, `rank_type` VARCHAR(255)
+
+### admission_c
+- `institution_id` VARCHAR(50) FK
+- `academic_year` VARCHAR(10)
+- `total_applicants`, `total_admitted`, `total_enrolled`
+- `applicants_international`, `admitted_international`, `enrolled_international`
+- PRIMARY KEY (institution_id, academic_year)
+
+## 🔧 CRITICAL RULES
+
+### Pydantic v2 (MANDATORY)
+**Project uses Pydantic v2. ALWAYS use:**
+```python
+from pydantic import BaseModel, ConfigDict
+
+class MyModel(BaseModel):
+    model_config = ConfigDict(from_attributes=True)  # NOT orm_mode = True
+
+# Convert SQLAlchemy to Pydantic
+item = MyModel.model_validate(obj)  # NOT from_orm()
+
+# Convert to dict
+data = item.model_dump()  # NOT dict()
+```
+
+### Docker Services
+```bash
+# Restart after backend changes
+docker-compose restart backend
+
+# View logs
+docker logs cds_project-backend-1 --tail 50
+
+# Access database
+docker exec -it cds_project-db-1 psql -U postgres -d cds_db
+```
+
+### Database Connection (Backend)
+```python
+# In Docker: use service name 'db'
+DATABASE_URL = "postgresql://postgres:postgres@db:5432/cds_db"
+
+# Outside Docker: use 'localhost'
+DATABASE_URL = "postgresql://postgres:postgres@localhost:5432/cds_db"
+```
+
+## 💻 CODING CONVENTIONS
+
+### Python (Backend + Scripts)
+- **Style:** PEP 8
+- **Naming:**
+  - Functions: `snake_case` (e.g., `get_schools_to_update()`)
+  - Classes: `PascalCase` (e.g., `Institution_Master`)
+  - Constants: `UPPER_SNAKE_CASE` (e.g., `DATABASE_URL`)
+- **Type Hints:** Required for all function parameters and returns
+- **Docstrings:** Required for all public functions
+
+### TypeScript (Frontend)
+- **Naming:**
+  - Components: `PascalCase` (e.g., `Navbar`)
+  - Functions: `camelCase` (e.g., `calcRate`)
+  - Interfaces: `PascalCase` (e.g., `School`)
+- **Interfaces:** Define for all data structures from API
+
+### Git Commits
+Format: `<type>: <description>`
+
+Types:
+- `feat`: New feature
+- `fix`: Bug fix
+- `refactor`: Code refactoring
+- `docs`: Documentation
+- `style`: CSS/formatting
+- `chore`: Dependencies, maintenance
+
+Examples:
+```
+feat: Add pagination to home page
+fix: Correct international acceptance rate calculation
+docs: Update API documentation
+```
+
+## 🎨 DESIGN SYSTEM
+
+### Colors
+- **Primary:** Indigo (`indigo-600`, `indigo-700`)
+- **Accent:** Amber (rankings), Blue (international data)
+- **Background:** Gradient `from-slate-50 via-blue-50 to-indigo-50`
+
+### Typography
+- **Headings:** `font-serif font-bold` (formal, elegant)
+- **Body:** Default sans-serif
+- **Numbers:** `font-bold text-right` (in tables)
+
+### Components
+- Use TailwindCSS classes
+- Rounded corners: `rounded-lg`, `rounded-xl`
+- Shadows: `shadow-md`, `shadow-xl`
+- Hover effects: `hover:bg-indigo-50`
+- Alternating row colors in tables
+
+## 🔌 API ENDPOINTS
+
+### GET /api/v1/schools
+List institutions with filters.
+
+Query params:
+- `q` (optional): Search by name
+- `letter` (optional): Filter by first letter (A-Z)
+- `limit` (optional): Max results (default: 100)
+
+Response:
+```json
+[{
+  "institution_id": "harvard_university",
+  "name": "Harvard University",
+  "rank_2025": 3,
+  "rank_type": "National Universities",
+  "total_applicants": 56000,
+  "total_admitted": 1950,
+  "applicants_international": 15000,
+  "admitted_international": 450
+}]
+```
+
+### GET /api/v1/schools/{id}
+Get detailed info for one school.
+
+Response includes `admission_data` array with year-over-year stats.
+
+## 🧪 TESTING
+
+**Before committing, ALWAYS run:**
+```bash
+./venv/bin/python test_system.py
+```
+
+Expected output:
+```
+✅ ALL TESTS PASSED!
+📊 Total Institutions: 230
+🏆 Schools with Rankings: 83
+```
+
+## 🚨 COMMON ISSUES & FIXES
+
+### Backend returns 500 error
+1. Check logs: `docker logs cds_project-backend-1 --tail 50`
+2. Common cause: Pydantic v1 syntax used (see rules above)
+3. Fix: Use `model_config`, `model_validate()`, `model_dump()`
+4. Restart: `docker-compose restart backend`
+
+### Frontend shows "No schools found"
+1. Test API: `curl http://localhost:8000/api/v1/schools?limit=5`
+2. If empty: Import data with `./venv/bin/python data_pipeline/scripts/import_from_csv.py`
+3. Check CORS: Ensure `CORSMiddleware` configured in `backend/app/main.py`
+
+### Model field doesn't exist (AttributeError)
+1. Check `backend/app/models/cds.py` matches DB schema
+2. Run SQL to add column if needed
+3. Restart backend
+
+### Scraping gets blocked
+1. Reduce batch size in `update_rankings.py` (limit=5)
+2. Increase delays between requests
+3. Wait 1+ hours before retrying
+4. Consider using proxy service
+
+## 📦 DEPENDENCIES
+
+### When adding new dependencies:
+
+**Backend:**
+1. Add to `backend/requirements.txt`
+2. Rebuild: `docker-compose up -d --build backend`
+
+**Frontend:**
+1. Add with: `docker exec cds_project-frontend-1 npm install <package>`
+2. OR: Add to `frontend/package.json` and rebuild
+
+**Data Pipeline:**
+1. Add to `requirements.txt` (root)
+2. Install in venv: `./venv/bin/pip install <package>`
+
+## 🔄 WORKFLOW FOR CHANGES
+
+### Frontend Change
+1. Edit files in `frontend/src/`
+2. Hot reload happens automatically
+3. If Dockerfile changed: `docker-compose up -d --build frontend`
+
+### Backend Change
+1. Edit files in `backend/app/`
+2. Restart: `docker-compose restart backend`
+3. If requirements.txt changed: `docker-compose up -d --build backend`
+
+### Database Schema Change
+1. Write SQL ALTER statements OR edit `create_db.py`
+2. Execute SQL in database
+3. Update `backend/app/models/cds.py` to match
+4. Update Pydantic schemas in `backend/app/api/endpoints.py` if needed
+5. Restart backend
+6. Test with `test_system.py`
+
+## 🎯 WHEN USER ASKS FOR CHANGES
+
+1. **Read relevant docs first** (ARCHITECTURE.md section)
+2. **Understand the full context** (check DB schema, API contracts)
+3. **Plan the change** (which files need updates?)
+4. **Make changes in correct order:**
+   - Database schema (if needed)
+   - Backend models
+   - Backend API
+   - Frontend
+5. **Test thoroughly** with `test_system.py`
+6. **Commit with proper format**
+
+## 📝 IMPORTANT NOTES
+
+- **NEVER use Pydantic v1 syntax** (project uses v2)
+- **NEVER bypass CORS** (already configured correctly)
+- **NEVER hardcode localhost** in frontend (use `getApiUrl()` from `lib/api.ts`)
+- **ALWAYS check Docker logs** when debugging backend issues
+- **ALWAYS restart backend** after model changes
+- **ALWAYS test before committing**
+
+## 🔐 ENVIRONMENT VARIABLES
+
+### Backend
+- `DATABASE_URL`: PostgreSQL connection string
+
+### Frontend
+- `NEXT_PUBLIC_API_URL`: Backend API base URL (must have `NEXT_PUBLIC_` prefix)
+
+### Data Pipeline
+- `GOOGLE_API_KEY`: Gemini API key for PDF parsing and scraping
+
+## 🎓 LEARNING RESOURCES
+
+- FastAPI: https://fastapi.tiangolo.com/
+- Next.js: https://nextjs.org/docs
+- SQLAlchemy: https://docs.sqlalchemy.org/
+- Pydantic v2: https://docs.pydantic.dev/latest/
+- TailwindCSS: https://tailwindcss.com/docs
+
+## 💡 BEST PRACTICES
+
+1. **Read before code** - Check ARCHITECTURE.md for the full picture
+2. **Test after changes** - Run `test_system.py`
+3. **Check logs** - Use Docker logs for debugging
+4. **Follow conventions** - Match existing code style
+5. **Document as you go** - Update docs if behavior changes
+6. **Commit atomically** - One logical change per commit
+7. **Think about data integrity** - Don't break existing records
+
+## 🚀 QUICK REFERENCE
+
+```bash
+# Start all services
+docker-compose up -d
+
+# Test system
+./venv/bin/python test_system.py
+
+# Restart backend
+docker-compose restart backend
+
+# View backend logs
+docker logs cds_project-backend-1 --tail 50
+
+# Access database
+docker exec -it cds_project-db-1 psql -U postgres -d cds_db
+
+# Test API
+curl http://localhost:8000/api/v1/schools?limit=5 | python3 -m json.tool
+
+# Access frontend
+open http://localhost:3000
+```
+
+---
+
+**Remember:** This is a production-ready application with real users. Make thoughtful changes, test thoroughly, and maintain code quality. When in doubt, check ARCHITECTURE.md or ask the user for clarification.
+
+**Version:** 1.0  
+**Last Updated:** December 2024
+
